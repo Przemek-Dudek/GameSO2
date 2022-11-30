@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <ncurses.h>
-#include <err.h>
-
 #include "functions.h"
 
 void print_char(char ch, int i, int j)
@@ -74,11 +68,11 @@ void print_char(char ch, int i, int j)
             attroff(COLOR_PAIR(5));
             break;
 
-        case '1':
+        case '1': case '2':
             attrset(COLOR_PAIR(7));
             move(i,j);
 
-            addch('1');
+            addch(ch);
             attroff(COLOR_PAIR(7));
             break;
 
@@ -120,8 +114,21 @@ void display_stats(struct server *server)
     move(6, (MAP_WIDTH+1)+1);
     printw("Coins brought - %d  ", server->player->bank);
     move(7, (MAP_WIDTH+1)+1);
-    printw("Round = %d", server->round);
-    move(8, (MAP_WIDTH+1)+1);
+
+    if((server->player+1)->is_there == 1) {
+        move(8, (MAP_WIDTH+1)+1);
+        printw("Player 2");
+        move(9, (MAP_WIDTH+1)+1);
+        printw("Position X/Y %d/%d  ", server->player[1].pos->x, server->player[1].pos->y);
+        move(10, (MAP_WIDTH+1)+1);
+        printw("Coins carried - %d  ", server->player[1].carried);
+        move(11, (MAP_WIDTH+1)+1);
+        printw("Coins brought - %d  ", server->player[1].bank);
+    }
+
+    move(13, (MAP_WIDTH+1)+1);
+    printw("Round = %d Player 2's Round = %d", server->round, testsik);
+    move(14, (MAP_WIDTH+1)+1);
     printw("Beast position X/Y %d/%d  ", server->beast->pos->x, server->beast->pos->y);
     move(MAP_HEIGHT+1, 1);
     printw("Q/q to quit");
@@ -140,12 +147,23 @@ void display_map(char **map, struct server *server)
 
     move(1, (MAP_WIDTH+1)+1);
 
-    display_stats(server);
+    if (server != NULL) {
+        display_stats(server);
+        if((server->player+1)->is_there == 1) {
+            print_char('2', (server->player+1)->pos->y, (server->player+1)->pos->x);
+        }
+        print_char('1', server->player->pos->y, server->player->pos->x);
+        print_char('*', server->beast->pos->y, server->beast->pos->x);
+    } else {
+        print_char('1', 2, 2);
+    }
 
-    print_char('1', server->player->pos->y, server->player->pos->x);
-    print_char('*', server->beast->pos->y, server->beast->pos->x);
+    if(server != NULL) {
+        move(MAP_HEIGHT-1, MAP_WIDTH-1);
+    } else {
+        move(10, 10);
+    }
 
-    move(MAP_HEIGHT-1, MAP_WIDTH-1);
     refresh();
 }
 
@@ -254,8 +272,9 @@ struct pos *move_check(int input, struct player *player, char **map)
 
 int prepServer(char ***map, struct server **server) {
     *server = calloc(1, sizeof(struct server));
-    (*server)->player = calloc(1, sizeof(struct player));
+    (*server)->player = calloc(2, sizeof(struct player));
     (*server)->player->pos = calloc(1, sizeof(struct pos));
+    ((*server)->player+1)->pos = calloc(1, sizeof(struct pos));
 
     (*server)->beast = calloc(1, sizeof(struct beast));
     (*server)->beast->pos = calloc(1, sizeof(struct pos));
@@ -265,10 +284,17 @@ int prepServer(char ***map, struct server **server) {
         *((*server)->player->view+i) = calloc(6, sizeof(char));
     }
 
+    ((*server)->player+1)->view = calloc(6, sizeof(char*));
+    for(int i = 0; i < 5; i++) {
+        *(((*server)->player+1)->view+i) = calloc(6, sizeof(char));
+    }
+
     (*server)->beast->view = calloc(6, sizeof(char*));
     for(int i = 0; i < 5; i++) {
         *((*server)->beast->view+i) = calloc(6, sizeof(char));
     }
+
+    ((*server)->player+1)->is_there = 0;
 
     map_gen();
 
@@ -292,6 +318,7 @@ int prepServer(char ***map, struct server **server) {
     }
 
     (*server)->player->pos = find_avb_pos(*map, (*server)->player->pos);
+    (*server)->player[1].pos = find_avb_pos(*map, (*server)->player[1].pos);
     (*server)->beast->pos = find_avb_pos(*map, (*server)->beast->pos);
 
     return 0;
@@ -368,16 +395,16 @@ void all_players_matter(struct player *player, char** map)
     }
 }
 
-char** player_vision(struct server *server, char **map) {
-    char **vision = server->player->view;
+char** player_vision(struct server *server, char **map, int pId) {
+    char **vision = server->player[pId].view;
 
     for(int i = 0; i < 5; i++) {
         for(int j = 0; j < 5; j++) {
             *(*(vision+i)+j) = 'B';
 
-            if(server->player->pos->y-2+i >= 0 && server->player->pos->y-1+i <= MAP_HEIGHT &&
-                    server->player->pos->x-2+j >= 0 && server->player->pos->x-1+j <= MAP_WIDTH) {
-                *(*(vision+i)+j) = *(*(map+server->player->pos->y-2+i)+server->player->pos->x-2+j);
+            if(server->player[pId].pos->y-2+i >= 0 && server->player[pId].pos->y-1+i <= MAP_HEIGHT &&
+                    server->player[pId].pos->x-2+j >= 0 && server->player[pId].pos->x-1+j <= MAP_WIDTH) {
+                *(*(vision+i)+j) = *(*(map+server->player[pId].pos->y-2+i)+server->player[pId].pos->x-2+j);
             }
         }
     }
@@ -399,4 +426,37 @@ char** beast_vision(struct server *server, char **map) {
     }
 
     return vision;
+}
+
+void *player2(void *arg)
+{
+    struct server *server = (struct server*)arg;
+
+    mkfifo("r_player", 0777);
+    mkfifo("w_player", 0777);
+
+    int r_fifo = open("r_player", O_RDONLY);
+    int w_fifo = open("w_player", O_WRONLY);
+
+    (server->player+1)->is_there = 1;
+
+    for(;testsik<3000;testsik++) { //do wyjebania ten conditional
+        pthread_mutex_lock(&(server->player+1)->player_m);
+        send_struct(server, w_fifo);
+    }
+
+    close(r_fifo);
+    close(w_fifo);
+}
+
+void send_struct(struct server *server, int w_fifo)
+{
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            char tmp = *(*((server->player+1)->view+i)+j);
+            write(w_fifo, &tmp, sizeof(char));
+        }
+    }
+
+
 }

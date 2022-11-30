@@ -57,23 +57,13 @@ RM = /opt/clion/bin/cmake/linux/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /media/sf_Debian/Gra
+CMAKE_SOURCE_DIR = /root/Desktop/Gra_nowa
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /media/sf_Debian/Gra/cmake-build-debug
+CMAKE_BINARY_DIR = /root/Desktop/Gra_nowa/cmake-build-debug
 
 #=============================================================================
 # Targets provided globally by CMake.
-
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/opt/clion/bin/cmake/linux/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-.PHONY : edit_cache/fast
 
 # Special rule for the target rebuild_cache
 rebuild_cache:
@@ -85,11 +75,21 @@ rebuild_cache:
 rebuild_cache/fast: rebuild_cache
 .PHONY : rebuild_cache/fast
 
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
+	/opt/clion/bin/cmake/linux/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+.PHONY : edit_cache
+
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+.PHONY : edit_cache/fast
+
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /media/sf_Debian/Gra/cmake-build-debug/CMakeFiles /media/sf_Debian/Gra/cmake-build-debug//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/Desktop/Gra_nowa/cmake-build-debug/CMakeFiles /root/Desktop/Gra_nowa/cmake-build-debug//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /media/sf_Debian/Gra/cmake-build-debug/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/Desktop/Gra_nowa/cmake-build-debug/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named Gra
+# Target rules for targets named Gra_nowa
 
 # Build rule for target.
-Gra: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Gra
-.PHONY : Gra
+Gra_nowa: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Gra_nowa
+.PHONY : Gra_nowa
 
 # fast build rule for target.
-Gra/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra.dir/build.make CMakeFiles/Gra.dir/build
-.PHONY : Gra/fast
+Gra_nowa/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra_nowa.dir/build.make CMakeFiles/Gra_nowa.dir/build
+.PHONY : Gra_nowa/fast
 
 main.o: main.c.o
 .PHONY : main.o
 
 # target to build an object file
 main.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra.dir/build.make CMakeFiles/Gra.dir/main.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra_nowa.dir/build.make CMakeFiles/Gra_nowa.dir/main.c.o
 .PHONY : main.c.o
 
 main.i: main.c.i
@@ -142,7 +142,7 @@ main.i: main.c.i
 
 # target to preprocess a source file
 main.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra.dir/build.make CMakeFiles/Gra.dir/main.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra_nowa.dir/build.make CMakeFiles/Gra_nowa.dir/main.c.i
 .PHONY : main.c.i
 
 main.s: main.c.s
@@ -150,7 +150,7 @@ main.s: main.c.s
 
 # target to generate assembly for a file
 main.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra.dir/build.make CMakeFiles/Gra.dir/main.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra_nowa.dir/build.make CMakeFiles/Gra_nowa.dir/main.c.s
 .PHONY : main.c.s
 
 # Help Target
@@ -161,7 +161,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... Gra"
+	@echo "... Gra_nowa"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

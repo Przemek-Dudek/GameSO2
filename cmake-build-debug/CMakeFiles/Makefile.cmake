@@ -7,9 +7,6 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 # The top level Makefile was generated from the following files:
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
-  "../CMakeLists.txt"
-  "CMakeFiles/3.20.2/CMakeCCompiler.cmake"
-  "CMakeFiles/3.20.2/CMakeSystem.cmake"
   "/opt/clion/bin/cmake/linux/share/cmake-3.20/Modules/CMakeCCompiler.cmake.in"
   "/opt/clion/bin/cmake/linux/share/cmake-3.20/Modules/CMakeCCompilerABI.c"
   "/opt/clion/bin/cmake/linux/share/cmake-3.20/Modules/CMakeCInformation.cmake"
@@ -81,6 +78,9 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/opt/clion/bin/cmake/linux/share/cmake-3.20/Modules/Platform/Linux.cmake"
   "/opt/clion/bin/cmake/linux/share/cmake-3.20/Modules/Platform/UnixPaths.cmake"
   "/opt/clion/bin/cmake/linux/share/cmake-3.20/Modules/ProcessorCount.cmake"
+  "../CMakeLists.txt"
+  "CMakeFiles/3.20.2/CMakeCCompiler.cmake"
+  "CMakeFiles/3.20.2/CMakeSystem.cmake"
   )
 
 # The corresponding makefile is:
@@ -99,5 +99,5 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/Gra.dir/DependInfo.cmake"
+  "CMakeFiles/Gra_nowa.dir/DependInfo.cmake"
   )

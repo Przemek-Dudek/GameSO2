@@ -1,9 +1,22 @@
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <ncurses.h>
+#include <err.h>
+#include <fcntl.h>
+#include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 int quitFlag = 0;
+
+int testsik = 0;
 
 struct pos {
     int x;
@@ -16,6 +29,7 @@ struct player {
     struct pos *pos;
 
     int krzok;
+    int is_there;
 
     char **view;
     int playerId;
@@ -64,3 +78,5 @@ void spawn_large_treasure(char ***map);
 void spawn_bestia(char ***map);
 
 int prepServer(char ***map, struct server **server);
+
+void send_struct(struct server *server, int w_fifo);

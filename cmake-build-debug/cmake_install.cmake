@@ -1,4 +1,4 @@
-# Install script for directory: /media/sf_Debian/Gra
+# Install script for directory: /root/Desktop/Gra_nowa
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/media/sf_Debian/Gra/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/root/Desktop/Gra_nowa/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

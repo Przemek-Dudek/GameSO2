@@ -15,25 +15,30 @@ int main()
     initscr();
     start_color();
 
-    //mkfifo("player.c", 0777);
-
     char **map = NULL;
     struct server *server;
 
     if(prepServer(&map, &server) != 0) return 1;
 
+    pthread_t test;
+
     pthread_mutex_init(&server->player->player_m, NULL);
+    pthread_mutex_init(&((server->player+1)->player_m), NULL);
     pthread_mutex_init(&server->beast->beast_m, NULL);
 
+
     pthread_create(&server->player->player_t, NULL, player_handle, server->player);
+    pthread_create(&((server->player+1)->player_t), NULL, player2, server);
     pthread_create(&server->beast->beast_t, NULL, beast_handle, server);
 
     for(int i = 0;; i++) {
-        server->player->view = player_vision(server, map);
+        player_vision(server, map, 0);
+        player_vision(server, map, 1);
         server->beast->view = beast_vision(server, map);
 
         pthread_mutex_unlock(&server->player->player_m);
         pthread_mutex_unlock(&server->beast->beast_m);
+        pthread_mutex_unlock(&((server->player+1)->player_m));
 
         if(quitFlag == 'q' || quitFlag == 'Q') {
             break;

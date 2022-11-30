@@ -54,16 +54,16 @@ RM = /opt/clion/bin/cmake/linux/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /media/sf_Debian/Gra
+CMAKE_SOURCE_DIR = /root/Desktop/Gra_nowa
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /media/sf_Debian/Gra/cmake-build-debug
+CMAKE_BINARY_DIR = /root/Desktop/Gra_nowa/cmake-build-debug
 
 #=============================================================================
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/Gra.dir/all
+all: CMakeFiles/Gra_nowa.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -71,34 +71,34 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/Gra.dir/clean
+clean: CMakeFiles/Gra_nowa.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/Gra.dir
+# Target rules for target CMakeFiles/Gra_nowa.dir
 
 # All Build rule for target.
-CMakeFiles/Gra.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra.dir/build.make CMakeFiles/Gra.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra.dir/build.make CMakeFiles/Gra.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/media/sf_Debian/Gra/cmake-build-debug/CMakeFiles --progress-num=1,2 "Built target Gra"
-.PHONY : CMakeFiles/Gra.dir/all
+CMakeFiles/Gra_nowa.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra_nowa.dir/build.make CMakeFiles/Gra_nowa.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra_nowa.dir/build.make CMakeFiles/Gra_nowa.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/Desktop/Gra_nowa/cmake-build-debug/CMakeFiles --progress-num=1,2 "Built target Gra_nowa"
+.PHONY : CMakeFiles/Gra_nowa.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/Gra.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /media/sf_Debian/Gra/cmake-build-debug/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/Gra.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /media/sf_Debian/Gra/cmake-build-debug/CMakeFiles 0
-.PHONY : CMakeFiles/Gra.dir/rule
+CMakeFiles/Gra_nowa.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/Desktop/Gra_nowa/cmake-build-debug/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/Gra_nowa.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/Desktop/Gra_nowa/cmake-build-debug/CMakeFiles 0
+.PHONY : CMakeFiles/Gra_nowa.dir/rule
 
 # Convenience name for target.
-Gra: CMakeFiles/Gra.dir/rule
-.PHONY : Gra
+Gra_nowa: CMakeFiles/Gra_nowa.dir/rule
+.PHONY : Gra_nowa
 
 # clean rule for target.
-CMakeFiles/Gra.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra.dir/build.make CMakeFiles/Gra.dir/clean
-.PHONY : CMakeFiles/Gra.dir/clean
+CMakeFiles/Gra_nowa.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra_nowa.dir/build.make CMakeFiles/Gra_nowa.dir/clean
+.PHONY : CMakeFiles/Gra_nowa.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.
