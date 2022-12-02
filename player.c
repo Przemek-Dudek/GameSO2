@@ -242,7 +242,6 @@ int main()
     pthread_create(&player->player_t, NULL, input_handle, player);
 
     while(1) {
-
         for(int i = 0; i < 5; i++) {
             for(int j = 0; j < 5; j++) {
                 char tmp;

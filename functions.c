@@ -429,29 +429,38 @@ char** beast_vision(struct server *server, char **map) {
 
 void *player2(void *arg)
 {
-    struct server *server = (struct server*)arg;
+    while(1) {
+        struct server *server = (struct server*)arg;
 
-    mkfifo("r_player", 0777);
-    mkfifo("w_player", 0777);
+        mkfifo("r_player", 0777);
+        mkfifo("w_player", 0777);
 
-    int r_fifo = open("r_player", O_RDONLY);
-    int w_fifo = open("w_player", O_WRONLY);
+        int r_fifo = open("r_player", O_RDONLY);
+        int w_fifo = open("w_player", O_WRONLY);
 
-    (server->player+1)->is_there = 1;
+        (server->player+1)->is_there = 1;
 
-    for(;;testsik++) { //do wyjebania ten conditional
-        pthread_mutex_lock(&(server->player+1)->player_m);
-        send_struct(server, w_fifo);
+        for(;;testsik++) {
+            pthread_mutex_lock(&(server->player+1)->player_m);
+            send_struct(server, w_fifo);
 
-        read(r_fifo, &p2In, sizeof(char));
+            read(r_fifo, &p2In, sizeof(char));
 
-        if(p2In == 'q' || p2In == 'Q') {
+            if(p2In == 'q' || p2In == 'Q') {
+                (server->player+1)->is_there = 0;
+                break;
+            }
+
+            server->player[1].pos = move_check(p2In, server->player+1, server->player[1].view);
+        }
+
+        close(r_fifo);
+        close(w_fifo);
+
+        if(quitFlag == 'q' || quitFlag == 'Q') {
             break;
         }
     }
-
-    close(r_fifo);
-    close(w_fifo);
 }
 
 void send_struct(struct server *server, int w_fifo)
