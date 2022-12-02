@@ -5,10 +5,49 @@
 #include <err.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "config.h"
 
-#include "functions.h"
+struct pos {
+    int x;
+    int y;
+};
+
+struct beast {
+    pthread_t beast_t;
+    pthread_mutex_t beast_m;
+
+    int krzok;
+    char **view;
+
+    struct pos *pos;
+};
+
+struct player {
+    pthread_mutex_t player_m;
+    pthread_t player_t;
+    struct pos *pos;
+
+    int krzok;
+    int is_there;
+    int fifo;
+
+    char **view;
+
+    int carried;
+    int bank;
+};
+
+struct server {
+    struct pos campsite;
+    struct player *player;
+    struct beast *beast;
+
+    int pId;
+
+    int round;
+};
 
 void print_char(char ch, int i, int j)
 {
@@ -135,28 +174,21 @@ void display_map(char **map, struct server *server)
 {
     if(map == NULL) return;
 
-    for(int i = 0; *(map+i) != NULL; i++) {
-        for(int j = 0; *(*(map+i)+j) != '\0'; j++)
-        {
-            print_char(*(*(map+i)+j), i, j);
+    for(int i = 0; i < 6; i++) {
+        for(int j = 0; j < 6; j++) {
+            if(i < 5 && j < 5) {
+                print_char(*(*(map+i)+j), i, j);
+            } else {
+                print_char('B', i, j);
+            }
         }
     }
 
     move(1, (MAP_WIDTH+1)+1);
 
-    if (server != NULL) {
-        display_stats(server);
-        print_char('1', server->player->pos->y, server->player->pos->x);
-        print_char('*', server->beast->pos->y, server->beast->pos->x);
-    } else {
-        print_char('2', 2, 2);
-    }
+    print_char('2', 2, 2);
 
-    if(server != NULL) {
-        move(MAP_HEIGHT-1, MAP_WIDTH-1);
-    } else {
-        move(10, 10);
-    }
+    move(10, 10);
 
     refresh();
 }
@@ -167,6 +199,25 @@ void free_map(char **map)
     for(int i = 0; *(map+i) != NULL; i++) free(*(map+i));
 
     free(map);
+}
+
+char input;
+
+void *input_handle(void *arg)
+{
+    struct player *player = (struct player*)arg;
+
+    while(1) {
+        pthread_mutex_lock(&player->player_m);
+
+        flushinp();
+
+        input = getchar();
+        write(player->fifo, &input, sizeof(char));
+        if(input == 'q' || input == 'Q') {
+            break;
+        }
+    }
 }
 
 int main()
@@ -182,7 +233,15 @@ int main()
         *(map+i) = calloc(6, sizeof(char));
     }
 
-    for (int k = 0; k < 1000; ++k) {
+    struct player *player = calloc(1, sizeof(struct player));
+
+    player->fifo = r_fifo;
+
+    pthread_mutex_init(&player->player_m, NULL);
+
+    pthread_create(&player->player_t, NULL, input_handle, player);
+
+    while(1) {
 
         for(int i = 0; i < 5; i++) {
             for(int j = 0; j < 5; j++) {
@@ -192,7 +251,11 @@ int main()
             }
         }
 
+        pthread_mutex_unlock(&player->player_m);
 
+        if(input == 'q' || input == 'Q') {
+            break;
+        }
 
         display_map(map, NULL);
     }

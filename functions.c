@@ -131,7 +131,7 @@ void display_stats(struct server *server)
     move(14, (MAP_WIDTH+1)+1);
     printw("Beast position X/Y %d/%d  ", server->beast->pos->x, server->beast->pos->y);
     move(MAP_HEIGHT+1, 1);
-    printw("Q/q to quit");
+    printw("Q/q to quit, %c", p2In);
 }
 
 void display_map(char **map, struct server *server)
@@ -320,6 +320,7 @@ int prepServer(char ***map, struct server **server) {
     (*server)->player->pos = find_avb_pos(*map, (*server)->player->pos);
     (*server)->player[1].pos = find_avb_pos(*map, (*server)->player[1].pos);
     (*server)->beast->pos = find_avb_pos(*map, (*server)->beast->pos);
+    (*server)->pId = getpid();
 
     return 0;
 }
@@ -341,8 +342,6 @@ void *player_handle(void *arg)
 
         quitFlag = getchar();
         timeout(-1);
-
-        //if(quitFlag == err) quitFlag = '0';
 
         player->pos = move_check(quitFlag, player, player->view);
     }
@@ -440,9 +439,15 @@ void *player2(void *arg)
 
     (server->player+1)->is_there = 1;
 
-    for(;testsik<3000;testsik++) { //do wyjebania ten conditional
+    for(;;testsik++) { //do wyjebania ten conditional
         pthread_mutex_lock(&(server->player+1)->player_m);
         send_struct(server, w_fifo);
+
+        read(r_fifo, &p2In, sizeof(char));
+
+        if(p2In == 'q' || p2In == 'Q') {
+            break;
+        }
     }
 
     close(r_fifo);

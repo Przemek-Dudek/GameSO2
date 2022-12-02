@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FUNCTIONS
+#define FUNCTIONS
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +16,7 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 int quitFlag = 0;
-
+char p2In;
 int testsik = 0;
 
 struct pos {
@@ -32,7 +33,6 @@ struct player {
     int is_there;
 
     char **view;
-    int playerId;
 
     int carried;
     int bank;
@@ -52,6 +52,8 @@ struct server {
     struct pos campsite;
     struct player *player;
     struct beast *beast;
+
+    int pId;
 
     int round;
 };
@@ -80,3 +82,5 @@ void spawn_bestia(char ***map);
 int prepServer(char ***map, struct server **server);
 
 void send_struct(struct server *server, int w_fifo);
+
+#endif
