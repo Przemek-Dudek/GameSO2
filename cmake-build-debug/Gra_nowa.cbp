@@ -81,6 +81,9 @@
 		<Unit filename="/root/Desktop/Gra_nowa/main.c">
 			<Option target="Gra_nowa"/>
 		</Unit>
+		<Unit filename="/root/Desktop/Gra_nowa/player.c">
+			<Option target="Gra_nowa"/>
+		</Unit>
 		<Unit filename="/root/Desktop/Gra_nowa/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>

@@ -557,5 +557,25 @@ void send_struct(struct server *server, int w_fifo)
         }
     }
 
+    for(int i = 0; i < 10; i++) {
+        int x, y, a;
+        x = server->graves[i].pos.x;
+        y = server->graves[i].pos.y;
 
+        a = server->graves[i].amount;
+
+        write(w_fifo, &x, sizeof(int));
+        write(w_fifo, &y, sizeof(int));
+        write(w_fifo, &a, sizeof(int));
+    }
+
+    int tmp = server->player->pos->x;
+    write(w_fifo, &tmp, sizeof(int));
+    tmp = server->player->pos->y;
+    write(w_fifo, &tmp, sizeof(int));
+
+    tmp = server->player[1].pos->x;
+    write(w_fifo, &tmp, sizeof(int));
+    tmp = server->player[1].pos->y;
+    write(w_fifo, &tmp, sizeof(int));
 }

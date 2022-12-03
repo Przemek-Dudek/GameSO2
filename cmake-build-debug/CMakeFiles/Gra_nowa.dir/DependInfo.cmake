@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
   "/root/Desktop/Gra_nowa/main.c" "/root/Desktop/Gra_nowa/cmake-build-debug/CMakeFiles/Gra_nowa.dir/main.c.o"
+  "/root/Desktop/Gra_nowa/player.c" "/root/Desktop/Gra_nowa/cmake-build-debug/CMakeFiles/Gra_nowa.dir/player.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 

@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/Gra_nowa.dir/main.c.o"
+  "CMakeFiles/Gra_nowa.dir/player.c.o"
   "Gra_nowa"
   "Gra_nowa.pdb"
 )

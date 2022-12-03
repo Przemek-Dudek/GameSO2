@@ -109,11 +109,11 @@ void print_char(char ch, int i, int j)
             attroff(COLOR_PAIR(5));
             break;
 
-        case 'T':
+            case 'T': case 'D':
             attrset(COLOR_PAIR(6));
             move(i,j);
 
-            addch('T');
+            addch(ch);
             attroff(COLOR_PAIR(6));
             break;
 
@@ -170,7 +170,7 @@ void display_stats(struct player *player)
 int check_coords(struct server *server, struct pos *pos)
 {
     struct pos *p = server->player[1].pos;
-    return (pos->y >= p->y-2 || pos->y <= p->y+2) && (pos->x >= p->x-2 || pos->x <= p->x+2);
+    return (pos->y >= p->y-2 && pos->y <= p->y+2) && (pos->x >= p->x-2 && pos->x <= p->x+2);
 }
 
 void display_map(char **map, struct server *server)
@@ -199,7 +199,7 @@ void display_map(char **map, struct server *server)
 
     for(int i = 0; i < 10; i++) {
         if(server->graves[i].pos.y != -1 && check_coords(server, &server->graves[i].pos)) {
-            print_char('D', server->graves[i].pos.y, server->graves[i].pos.x);
+            print_char('D', server->graves[i].pos.y - server->player[1].pos->y + 2, server->graves[i].pos.x - server->player[1].pos->x + 2);
         }
     }
 
@@ -247,15 +247,17 @@ int main()
         *(map+i) = calloc(6, sizeof(char));
     }
 
-    struct player *player = calloc(1, sizeof(struct player));
     struct server *server = calloc(1, sizeof(struct server));
+    server->player = calloc(2, sizeof(struct player));
 
+    server->player[1].fifo = r_fifo;
+    server->player[1].view = map;
 
-    player->fifo = r_fifo;
-    player->view = map;
+    server->player->pos = calloc(1, sizeof(struct pos));
+    server->player[1].pos = calloc(1, sizeof(struct pos));
 
-    pthread_mutex_init(&player->player_m, NULL);
-    pthread_create(&player->player_t, NULL, input_handle, player);
+    pthread_mutex_init(&server->player[1].player_m, NULL);
+    pthread_create(&server->player[1].player_t, NULL, input_handle, server->player+1);
 
     for(howmany = 0;;howmany++) {
         for(int i = 0; i < 5; i++) {
@@ -265,13 +267,39 @@ int main()
                 *(*(map+i)+j) = tmp;
             }
         }
+
+        for(int i = 0; i < 10; i++) {
+            int x, y, a;
+
+            read(w_fifo, &x, sizeof(int));
+            read(w_fifo, &y, sizeof(int));
+            read(w_fifo, &a, sizeof(int));
+
+            server->graves[i].pos.x = x;
+            server->graves[i].pos.y = y;
+            server->graves[i].amount = x;
+        }
+
+        int tmp;
+        read(w_fifo, &tmp, sizeof(int));
+        server->player->pos->x = tmp;
+
+        read(w_fifo, &tmp, sizeof(int));
+        server->player->pos->y = tmp;
+
+        read(w_fifo, &tmp, sizeof(int));
+        server->player[1].pos->x = tmp;
+
+        read(w_fifo, &tmp, sizeof(int));
+        server->player[1].pos->y = tmp;
+
         display_map(map, server);
 
-        player->view = map;
+        server->player[1].view = map;
 
-        pthread_mutex_unlock(&player->player_m);
+        pthread_mutex_unlock(&server->player[1].player_m);
 
-        write(player->fifo, &input, sizeof(char));
+        write(server->player[1].fifo, &input, sizeof(char));
 
         if(input == 'q' || input == 'Q') {
             break;

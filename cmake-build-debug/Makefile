@@ -153,6 +153,30 @@ main.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra_nowa.dir/build.make CMakeFiles/Gra_nowa.dir/main.c.s
 .PHONY : main.c.s
 
+player.o: player.c.o
+.PHONY : player.o
+
+# target to build an object file
+player.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra_nowa.dir/build.make CMakeFiles/Gra_nowa.dir/player.c.o
+.PHONY : player.c.o
+
+player.i: player.c.i
+.PHONY : player.i
+
+# target to preprocess a source file
+player.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra_nowa.dir/build.make CMakeFiles/Gra_nowa.dir/player.c.i
+.PHONY : player.c.i
+
+player.s: player.c.s
+.PHONY : player.s
+
+# target to generate assembly for a file
+player.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Gra_nowa.dir/build.make CMakeFiles/Gra_nowa.dir/player.c.s
+.PHONY : player.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -165,6 +189,9 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... player.o"
+	@echo "... player.i"
+	@echo "... player.s"
 .PHONY : help
 
 
