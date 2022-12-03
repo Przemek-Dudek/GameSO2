@@ -67,6 +67,7 @@ void print_char(char ch, int i, int j)
     init_pair(6, COLOR_BLUE, COLOR_BLACK); //LARGE TREASURE
     init_pair(7, COLOR_WHITE, COLOR_BLUE); //PLAYER
     init_pair(8, COLOR_WHITE, COLOR_RED); //BESTIA
+    init_pair(9, COLOR_YELLOW, COLOR_YELLOW);
 
     switch (ch) {
         case 'W':
@@ -142,11 +143,11 @@ void print_char(char ch, int i, int j)
             break;
 
         case 'B':
-            attrset(COLOR_PAIR(8));
+            attrset(COLOR_PAIR(9));
             move(i,j);
 
             addch(' ');
-            attroff(COLOR_PAIR(8));
+            attroff(COLOR_PAIR(9));
             break;
 
         default:
@@ -159,42 +160,72 @@ void print_char(char ch, int i, int j)
     }
 }
 
-void display_stats(struct player *player)
+void display_stats(struct server *server)
 {
-    move(3, 7);
-    printw("Round %d", howmany);
-    move(7, 1);
+    move(0, 8);
+    printw("Server PID: %d", server->pId);
+    move(2, 8);
+    printw("Player's round %d", howmany);
+
+    move(3, 8);
+    printw("Player Coord's x/y: %d/%d", server->player[1].pos->x, server->player[1].pos->y);
+    move(4, 8);
+    printw("Coins carried - %d  ", server->player[1].carried);
+    move(5, 8);
+    printw("Coins brought - %d  ", server->player[1].bank);
+
+    if(server->campsite.y != -1) {
+        move(6, 8);
+        printw("Campsite x/y: %d/%d", server->campsite.x, server->campsite.y);
+    } else {
+        move(6, 8);
+        printw("Campsite x/y: ?/?");
+    }
+
+    move(8, 1);
     printw("Q/q to quit");
 }
 
 int check_coords(struct server *server, struct pos *pos)
 {
     struct pos *p = server->player[1].pos;
-    return (pos->y >= p->y-2 && pos->y <= p->y+2) && (pos->x >= p->x-2 && pos->x <= p->x+2);
+    return (pos->y >= p->y-1 && pos->y <= p->y+3) && (pos->x >= p->x-1 && pos->x <= p->x+3);
 }
 
 void display_map(char **map, struct server *server)
 {
     if(map == NULL) return;
 
-    for(int i = 0; i < 6; i++) {
-        for(int j = 0; j < 6; j++) {
-            if(i < 5 && j < 5) {
-                print_char(*(*(map+i)+j), i, j);
-            } else {
+    for(int i = 0; i < 7; i++) {
+        for(int j = 0; j < 7; j++) {
+            if(i == 0 || j == 0 || i == 6 || j == 6) {
                 print_char('B', i, j);
+            }
+
+            if(i < 5 && j < 5) {
+                print_char(*(*(map+i)+j), i+1, j+1);
+                if(server->campsite.y == -1) {
+                    if (*(*(map + i) + j) == 'A') {
+                        server->campsite.x = server->player[1].pos->x + j-2;
+                        server->campsite.y = server->player[1].pos->y + i-2;
+                    }
+                }
             }
         }
     }
 
     move(1, (MAP_WIDTH+1)+1);
 
-    print_char('2', 2, 2);
+    print_char('2', 3, 3);
 
-    display_stats(server->player+1);
+    display_stats(server);
 
     if(check_coords(server, server->player->pos)) {
-        print_char('1', server->player->pos->y - server->player[1].pos->y + 2, server->player->pos->x - server->player[1].pos->x + 2);
+        print_char('1', server->player->pos->y - server->player[1].pos->y + 3, server->player->pos->x - server->player[1].pos->x + 3);
+    }
+
+    if(check_coords(server, server->beast->pos)) {
+        print_char('*', server->beast->pos->y - server->player[1].pos->y + 3, server->beast->pos->x - server->player[1].pos->x + 3);
     }
 
     for(int i = 0; i < 10; i++) {
@@ -256,6 +287,11 @@ int main()
     server->player->pos = calloc(1, sizeof(struct pos));
     server->player[1].pos = calloc(1, sizeof(struct pos));
 
+    server->beast = calloc(1, sizeof(struct beast));
+    server->beast->pos = calloc(1, sizeof(struct pos));
+
+    server->campsite.y = -1;
+
     pthread_mutex_init(&server->player[1].player_m, NULL);
     pthread_create(&server->player[1].player_t, NULL, input_handle, server->player+1);
 
@@ -292,6 +328,21 @@ int main()
 
         read(w_fifo, &tmp, sizeof(int));
         server->player[1].pos->y = tmp;
+
+        read(w_fifo, &tmp, sizeof(int));
+        server->player[1].bank = tmp;
+
+        read(w_fifo, &tmp, sizeof(int));
+        server->player[1].carried = tmp;
+
+        read(w_fifo, &tmp, sizeof(int));
+        server->pId = tmp;
+
+        read(w_fifo, &tmp, sizeof(int));
+        server->beast->pos->x = tmp;
+
+        read(w_fifo, &tmp, sizeof(int));
+        server->beast->pos->y = tmp;
 
         display_map(map, server);
 

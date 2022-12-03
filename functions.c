@@ -578,4 +578,17 @@ void send_struct(struct server *server, int w_fifo)
     write(w_fifo, &tmp, sizeof(int));
     tmp = server->player[1].pos->y;
     write(w_fifo, &tmp, sizeof(int));
+
+    tmp = server->player[1].bank;
+    write(w_fifo, &tmp, sizeof(int));
+    tmp = server->player[1].carried;
+    write(w_fifo, &tmp, sizeof(int));
+
+    tmp = server->pId;
+    write(w_fifo, &tmp, sizeof(int));
+
+    tmp = server->beast->pos->x;
+    write(w_fifo, &tmp, sizeof(int));
+    tmp = server->beast->pos->y;
+    write(w_fifo, &tmp, sizeof(int));
 }
