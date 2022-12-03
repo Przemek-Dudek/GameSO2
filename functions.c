@@ -56,7 +56,7 @@ void print_char(char ch, int i, int j)
             attrset(COLOR_PAIR(6));
             move(i,j);
 
-            addch('T');
+            addch(ch);
             attroff(COLOR_PAIR(6));
             break;
 
@@ -104,31 +104,33 @@ void print_char(char ch, int i, int j)
 
 void display_stats(struct server *server)
 {
+    printw("Server PID: %d",server->pId);
+    move(2, (MAP_WIDTH+1)+1);
     printw("Campsite X/Y %d/%d", server->campsite.x, server->campsite.y);
-    move(3, (MAP_WIDTH+1)+1);
-    printw("Player 1");
     move(4, (MAP_WIDTH+1)+1);
-    printw("Position X/Y %d/%d  ", server->player->pos->x, server->player->pos->y);
+    printw("Player 1");
     move(5, (MAP_WIDTH+1)+1);
-    printw("Coins carried - %d  ", server->player->carried);
+    printw("Position X/Y %d/%d  ", server->player->pos->x, server->player->pos->y);
     move(6, (MAP_WIDTH+1)+1);
-    printw("Coins brought - %d  ", server->player->bank);
+    printw("Coins carried - %d  ", server->player->carried);
     move(7, (MAP_WIDTH+1)+1);
+    printw("Coins brought - %d  ", server->player->bank);
+    move(8, (MAP_WIDTH+1)+1);
 
     if((server->player+1)->is_there == 1) {
-        move(8, (MAP_WIDTH+1)+1);
-        printw("Player 2");
         move(9, (MAP_WIDTH+1)+1);
-        printw("Position X/Y %d/%d  ", server->player[1].pos->x, server->player[1].pos->y);
+        printw("Player 2");
         move(10, (MAP_WIDTH+1)+1);
-        printw("Coins carried - %d  ", server->player[1].carried);
+        printw("Position X/Y %d/%d  ", server->player[1].pos->x, server->player[1].pos->y);
         move(11, (MAP_WIDTH+1)+1);
+        printw("Coins carried - %d  ", server->player[1].carried);
+        move(12, (MAP_WIDTH+1)+1);
         printw("Coins brought - %d  ", server->player[1].bank);
     }
 
-    move(13, (MAP_WIDTH+1)+1);
-    printw("Round = %d Player 2's Round = %d", server->round, testsik);
     move(14, (MAP_WIDTH+1)+1);
+    printw("Round = %d Player 2's Round = %d", server->round, testsik);
+    move(15, (MAP_WIDTH+1)+1);
     printw("Beast position X/Y %d/%d  ", server->beast->pos->x, server->beast->pos->y);
     move(MAP_HEIGHT+1, 1);
     printw("Q/q to quit, %c", p2In);
@@ -158,6 +160,12 @@ void display_map(char **map, struct server *server)
         print_char('*', server->beast->pos->y, server->beast->pos->x);
     } else {
         print_char('1', 2, 2);
+    }
+
+    for(int i = 0; i < 10; i++) {
+        if(server->graves[i].pos.y != -1) {
+            print_char('D', server->graves[i].pos.y, server->graves[i].pos.x);
+        }
     }
 
     if(server != NULL) {
@@ -323,7 +331,6 @@ int prepServer(char ***map, struct server **server) {
     (*server)->player[1].pos = find_avb_pos(*map, (*server)->player[1].pos);
     (*server)->beast->pos = find_avb_pos(*map, (*server)->beast->pos);
     (*server)->pId = getpid();
-    (*server)->map = *map;
 
     for(int i = 0; i < 10; i++) {
         (*server)->graves[i].amount = 0;
@@ -369,15 +376,23 @@ void *beast_handle(void *arg)
 
 void add_grave(struct server *server, struct pos *pos, int amount)
 {
+    for(int i = 0; i < 10; i++) {
+        if(server->graves[i].pos.y == -1) {
+            server->graves[i].pos.y = pos->y;
+            server->graves[i].pos.x = pos->x;
 
+            server->graves[i].amount = amount;
+            break;
+        }
+    }
 }
 
-void check_collision(struct server *server) {
+void check_collision(struct server *server, char** map) {
     struct pos *p1 = server->player->pos;
     struct pos *p2 = server->player[1].pos;
     struct pos *b = server->beast->pos;
 
-    if(p1->y == p2->y && p1->x == p2->x) {
+    if(p1->y == p2->y && p1->x == p2->x && server->player[1].is_there == 1) {
         int amount = 0;
         amount += server->player->carried;
         amount += server->player[1].carried;
@@ -386,8 +401,8 @@ void check_collision(struct server *server) {
         server->player->carried = 0;
         server->player[1].carried = 0;
 
-        server->player->pos = find_avb_pos(server->map, server->player->pos);
-        server->player[1].pos = find_avb_pos(server->map, server->player[1].pos);
+        server->player->pos = find_avb_pos(map, server->player->pos);
+        server->player[1].pos = find_avb_pos(map, server->player[1].pos);
     }
 
     if(p1->y == b->y && p1->x == b->x) {
@@ -396,16 +411,34 @@ void check_collision(struct server *server) {
         add_grave(server, p1, amount);
 
         server->player->carried = 0;
-        server->player->pos = find_avb_pos(server->map, server->player->pos);
+        server->player->pos = find_avb_pos(map, server->player->pos);
     }
 
-    if(p2->y == b->y && p2->x == b->x) {
+    if(p2->y == b->y && p2->x == b->x && server->player[1].is_there == 1) {
         int amount = 0;
         amount += server->player[1].carried;
         add_grave(server, p2, amount);
 
         server->player[1].carried = 0;
-        server->player[1].pos = find_avb_pos(server->map, server->player[1].pos);
+        server->player[1].pos = find_avb_pos(map, server->player[1].pos);
+    }
+
+    for(int i = 0; i < 10; i++) {
+        if(server->graves[i].pos.y != -1) {
+            if(p1->y == server->graves[i].pos.y && p1->x == server->graves[i].pos.x) {
+                server->player->carried += server->graves[i].amount;
+                server->graves[i].amount = 0;
+                server->graves[i].pos.y = -1;
+                server->graves[i].pos.x = -1;
+            }
+
+            if(p2->y == server->graves[i].pos.y && p2->x == server->graves[i].pos.x) {
+                server->player[1].carried += server->graves[i].amount;
+                server->graves[i].amount = 0;
+                server->graves[i].pos.y = -1;
+                server->graves[i].pos.x = -1;
+            }
+        }
     }
 }
 

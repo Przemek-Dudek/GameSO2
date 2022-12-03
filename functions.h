@@ -59,8 +59,6 @@ struct server {
     struct beast *beast;
     struct grave graves[10];
 
-    char **map;
-
     int pId;
 
     int round;

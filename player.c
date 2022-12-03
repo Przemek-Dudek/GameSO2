@@ -41,10 +41,16 @@ struct player {
     int bank;
 };
 
+struct grave {
+    struct pos pos;
+    int amount;
+};
+
 struct server {
     struct pos campsite;
     struct player *player;
     struct beast *beast;
+    struct grave graves[10];
 
     int pId;
 
@@ -161,7 +167,13 @@ void display_stats(struct player *player)
     printw("Q/q to quit");
 }
 
-void display_map(char **map, struct player *player)
+int check_coords(struct server *server, struct pos *pos)
+{
+    struct pos *p = server->player[1].pos;
+    return (pos->y >= p->y-2 || pos->y <= p->y+2) && (pos->x >= p->x-2 || pos->x <= p->x+2);
+}
+
+void display_map(char **map, struct server *server)
 {
     if(map == NULL) return;
 
@@ -179,7 +191,17 @@ void display_map(char **map, struct player *player)
 
     print_char('2', 2, 2);
 
-    display_stats(player);
+    display_stats(server->player+1);
+
+    if(check_coords(server, server->player->pos)) {
+        print_char('1', server->player->pos->y - server->player[1].pos->y + 2, server->player->pos->x - server->player[1].pos->x + 2);
+    }
+
+    for(int i = 0; i < 10; i++) {
+        if(server->graves[i].pos.y != -1 && check_coords(server, &server->graves[i].pos)) {
+            print_char('D', server->graves[i].pos.y, server->graves[i].pos.x);
+        }
+    }
 
     move(10, 10);
 
@@ -205,8 +227,6 @@ void *input_handle(void *arg)
 
         flushinp();
 
-        input = '0';
-
         input = getchar();
         if(input == 'q' || input == 'Q') {
             break;
@@ -228,6 +248,8 @@ int main()
     }
 
     struct player *player = calloc(1, sizeof(struct player));
+    struct server *server = calloc(1, sizeof(struct server));
+
 
     player->fifo = r_fifo;
     player->view = map;
@@ -243,7 +265,7 @@ int main()
                 *(*(map+i)+j) = tmp;
             }
         }
-        display_map(map, player);
+        display_map(map, server);
 
         player->view = map;
 
@@ -254,6 +276,8 @@ int main()
         if(input == 'q' || input == 'Q') {
             break;
         }
+
+        input = '0';
     }
 
     close(r_fifo);
