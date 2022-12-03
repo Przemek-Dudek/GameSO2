@@ -47,7 +47,9 @@ int main()
 
         server->round = i;
         all_players_matter(server->player, map);
+        check_collision(server);
         all_players_matter(server->player+1, map);
+        check_collision(server);
         display_map(map, server);
     }
 

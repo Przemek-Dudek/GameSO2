@@ -9,6 +9,8 @@
 
 #include "config.h"
 
+int howmany;
+
 struct pos {
     int x;
     int y;
@@ -151,26 +153,15 @@ void print_char(char ch, int i, int j)
     }
 }
 
-void display_stats(struct server *server)
+void display_stats(struct player *player)
 {
-    printw("Campsite X/Y %d/%d", server->campsite.x, server->campsite.y);
-    move(3, (MAP_WIDTH+1)+1);
-    printw("Player 1");
-    move(4, (MAP_WIDTH+1)+1);
-    printw("Position X/Y %d/%d  ", server->player->pos->x, server->player->pos->y);
-    move(5, (MAP_WIDTH+1)+1);
-    printw("Coins carried - %d  ", server->player->carried);
-    move(6, (MAP_WIDTH+1)+1);
-    printw("Coins brought - %d  ", server->player->bank);
-    move(7, (MAP_WIDTH+1)+1);
-    printw("Round = %d", server->round);
-    move(8, (MAP_WIDTH+1)+1);
-    printw("Beast position X/Y %d/%d  ", server->beast->pos->x, server->beast->pos->y);
-    move(MAP_HEIGHT+1, 1);
+    move(3, 7);
+    printw("Round %d", howmany);
+    move(7, 1);
     printw("Q/q to quit");
 }
 
-void display_map(char **map, struct server *server)
+void display_map(char **map, struct player *player)
 {
     if(map == NULL) return;
 
@@ -187,6 +178,8 @@ void display_map(char **map, struct server *server)
     move(1, (MAP_WIDTH+1)+1);
 
     print_char('2', 2, 2);
+
+    display_stats(player);
 
     move(10, 10);
 
@@ -212,8 +205,9 @@ void *input_handle(void *arg)
 
         flushinp();
 
+        input = '0';
+
         input = getchar();
-        write(player->fifo, &input, sizeof(char));
         if(input == 'q' || input == 'Q') {
             break;
         }
@@ -236,12 +230,12 @@ int main()
     struct player *player = calloc(1, sizeof(struct player));
 
     player->fifo = r_fifo;
+    player->view = map;
 
     pthread_mutex_init(&player->player_m, NULL);
-
     pthread_create(&player->player_t, NULL, input_handle, player);
 
-    while(1) {
+    for(howmany = 0;;howmany++) {
         for(int i = 0; i < 5; i++) {
             for(int j = 0; j < 5; j++) {
                 char tmp;
@@ -249,14 +243,17 @@ int main()
                 *(*(map+i)+j) = tmp;
             }
         }
+        display_map(map, player);
+
+        player->view = map;
 
         pthread_mutex_unlock(&player->player_m);
+
+        write(player->fifo, &input, sizeof(char));
 
         if(input == 'q' || input == 'Q') {
             break;
         }
-
-        display_map(map, NULL);
     }
 
     close(r_fifo);

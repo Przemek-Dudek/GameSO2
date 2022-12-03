@@ -48,10 +48,18 @@ struct beast {
     struct pos *pos;
 };
 
+struct grave {
+    struct pos pos;
+    int amount;
+};
+
 struct server {
     struct pos campsite;
     struct player *player;
     struct beast *beast;
+    struct grave graves[10];
+
+    char **map;
 
     int pId;
 

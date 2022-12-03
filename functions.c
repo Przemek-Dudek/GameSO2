@@ -52,7 +52,7 @@ void print_char(char ch, int i, int j)
             attroff(COLOR_PAIR(5));
             break;
 
-        case 'T':
+        case 'T': case 'D':
             attrset(COLOR_PAIR(6));
             move(i,j);
 
@@ -132,6 +132,8 @@ void display_stats(struct server *server)
     printw("Beast position X/Y %d/%d  ", server->beast->pos->x, server->beast->pos->y);
     move(MAP_HEIGHT+1, 1);
     printw("Q/q to quit, %c", p2In);
+
+    refresh();
 }
 
 void display_map(char **map, struct server *server)
@@ -321,6 +323,13 @@ int prepServer(char ***map, struct server **server) {
     (*server)->player[1].pos = find_avb_pos(*map, (*server)->player[1].pos);
     (*server)->beast->pos = find_avb_pos(*map, (*server)->beast->pos);
     (*server)->pId = getpid();
+    (*server)->map = *map;
+
+    for(int i = 0; i < 10; i++) {
+        (*server)->graves[i].amount = 0;
+        (*server)->graves[i].pos.y = -1;
+        (*server)->graves[i].pos.x = -1;
+    }
 
     return 0;
 }
@@ -337,11 +346,9 @@ void *player_handle(void *arg)
         }
 
         flushinp();
-
-        timeout(500);
+        timeout(1000);
 
         quitFlag = getchar();
-        timeout(-1);
 
         player->pos = move_check(quitFlag, player, player->view);
     }
@@ -357,6 +364,48 @@ void *beast_handle(void *arg)
         if(quitFlag == 'q' || quitFlag == 'Q') {
             break;
         }
+    }
+}
+
+void add_grave(struct server *server, struct pos *pos, int amount)
+{
+
+}
+
+void check_collision(struct server *server) {
+    struct pos *p1 = server->player->pos;
+    struct pos *p2 = server->player[1].pos;
+    struct pos *b = server->beast->pos;
+
+    if(p1->y == p2->y && p1->x == p2->x) {
+        int amount = 0;
+        amount += server->player->carried;
+        amount += server->player[1].carried;
+        add_grave(server, p1, amount);
+
+        server->player->carried = 0;
+        server->player[1].carried = 0;
+
+        server->player->pos = find_avb_pos(server->map, server->player->pos);
+        server->player[1].pos = find_avb_pos(server->map, server->player[1].pos);
+    }
+
+    if(p1->y == b->y && p1->x == b->x) {
+        int amount = 0;
+        amount += server->player->carried;
+        add_grave(server, p1, amount);
+
+        server->player->carried = 0;
+        server->player->pos = find_avb_pos(server->map, server->player->pos);
+    }
+
+    if(p2->y == b->y && p2->x == b->x) {
+        int amount = 0;
+        amount += server->player[1].carried;
+        add_grave(server, p2, amount);
+
+        server->player[1].carried = 0;
+        server->player[1].pos = find_avb_pos(server->map, server->player[1].pos);
     }
 }
 
@@ -383,6 +432,9 @@ void all_players_matter(struct player *player, char** map)
         case 'T':
             *(*(map+player->pos->y)+player->pos->x) = ' ';
             player->carried += LARGE_TREASURE_VALUE;
+            break;
+
+        case 'D':
             break;
 
         case '#':
