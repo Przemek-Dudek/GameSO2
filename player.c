@@ -10,6 +10,7 @@
 #include "config.h"
 
 int howmany;
+int quitFlag;
 
 struct pos {
     int x;
@@ -189,7 +190,7 @@ void display_stats(struct server *server)
 int check_coords(struct server *server, struct pos *pos)
 {
     struct pos *p = server->player[1].pos;
-    return (pos->y >= p->y-1 && pos->y <= p->y+3) && (pos->x >= p->x-1 && pos->x <= p->x+3);
+    return (pos->y >= p->y-2 && pos->y <= p->y+2) && (pos->x >= p->x-2 && pos->x <= p->x+2);
 }
 
 void display_map(char **map, struct server *server)
@@ -259,7 +260,7 @@ void *input_handle(void *arg)
         flushinp();
 
         input = getchar();
-        if(input == 'q' || input == 'Q') {
+        if(input == 'q' || input == 'Q' || quitFlag == 1) {
             break;
         }
     }
@@ -344,6 +345,8 @@ int main()
         read(w_fifo, &tmp, sizeof(int));
         server->beast->pos->y = tmp;
 
+        read(w_fifo, &quitFlag, sizeof(int));
+
         display_map(map, server);
 
         server->player[1].view = map;
@@ -352,7 +355,7 @@ int main()
 
         write(server->player[1].fifo, &input, sizeof(char));
 
-        if(input == 'q' || input == 'Q') {
+        if(input == 'q' || input == 'Q' || quitFlag == 1) {
             break;
         }
 

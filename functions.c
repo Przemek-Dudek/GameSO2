@@ -750,4 +750,12 @@ void send_struct(struct server *server, int w_fifo)
     write(w_fifo, &tmp, sizeof(int));
     tmp = server->beast->pos->y;
     write(w_fifo, &tmp, sizeof(int));
+
+    tmp = 0;
+
+    if(quitFlag == 'q' || quitFlag == 'Q') {
+        tmp = 1;
+    }
+
+    write(w_fifo, &tmp, sizeof(int));
 }
