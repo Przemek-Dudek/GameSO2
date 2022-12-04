@@ -44,6 +44,7 @@ struct beast {
 
     int krzok;
     char **view;
+    char dir;
 
     struct pos *pos;
 };
@@ -71,6 +72,7 @@ void display_map(char **map, struct server *server);
 void free_map(char **map);
 int read_map(char ***map);
 struct pos *move_check(int input, struct player *player, char **map);
+struct pos *beast_move_check(int input, struct beast *player, char **map, int *flag);
 
 struct pos *find_avb_pos(char **map, struct pos *position);
 int move_pos(struct pos *cur, char **map, int step);

@@ -131,7 +131,9 @@ void display_stats(struct server *server)
     move(14, (MAP_WIDTH+1)+1);
     printw("Round = %d Player 2's Round = %d", server->round, testsik);
     move(15, (MAP_WIDTH+1)+1);
-    printw("Beast position X/Y %d/%d  ", server->beast->pos->x, server->beast->pos->y);
+    printw("Beast position X/Y %d/%d    ", server->beast->pos->x, server->beast->pos->y);
+    move(16, (MAP_WIDTH+1)+1);
+    printw("Beast direction: %c", server->beast->dir);
     move(MAP_HEIGHT+1, 1);
     printw("Q/q to quit, %c", p2In);
 
@@ -279,6 +281,82 @@ struct pos *move_check(int input, struct player *player, char **map)
     }
 }
 
+struct pos *beast_move_check(int input, struct beast *player, char **map, int *flag)
+{
+    struct pos *position = player->pos;
+    *flag = 1;
+    switch (input) {
+        case 'w': case 'W':
+            if(position->y == 0 || *(*(map+2-1)+2) == 'W') {
+                *flag = 0;
+                return position;
+            }
+
+            if(player->krzok == 1) {
+                player->krzok = 0;
+                return position;
+            }
+
+            if(*(*(map+2-1)+2) == '#') player->krzok = 1;
+
+
+            position->y -= 1;
+            return position;
+
+        case 'a': case 'A':
+            if(position->x == 0 || *(*(map+2)+2-1) == 'W') {
+                *flag = 0;
+                return position;
+            }
+
+            if(player->krzok == 1) {
+                player->krzok = 0;
+                return position;
+            }
+
+            if(*(*(map+2)+2-1) == '#') player->krzok = 1;
+
+            position->x -= 1;
+            return position;
+
+        case 's': case 'S':
+            if(position->y == MAP_HEIGHT-1 || *(*(map+2+1)+2) == 'W') {
+                *flag = 0;
+                return position;
+            }
+
+            if(player->krzok == 1) {
+                player->krzok = 0;
+                return position;
+            }
+
+            if(*(*(map+2+1)+2) == '#') player->krzok = 1;
+
+
+            position->y += 1;
+            return position;
+
+        case 'd': case 'D':
+            if(position->x == (MAP_WIDTH+1)-1 || *(*(map+2)+2+1) == 'W') {
+                *flag = 0;
+                return position;
+            }
+
+            if(player->krzok == 1) {
+                player->krzok = 0;
+                return position;
+            }
+
+            if(*(*(map+2)+2+1) == '#') player->krzok = 1;
+
+            position->x += 1;
+            return position;
+
+        default:
+            flag = 0;
+            return position;
+    }
+}
 
 int prepServer(char ***map, struct server **server) {
     *server = calloc(1, sizeof(struct server));
@@ -330,6 +408,7 @@ int prepServer(char ***map, struct server **server) {
     (*server)->player->pos = find_avb_pos(*map, (*server)->player->pos);
     (*server)->player[1].pos = find_avb_pos(*map, (*server)->player[1].pos);
     (*server)->beast->pos = find_avb_pos(*map, (*server)->beast->pos);
+    (*server)->beast->dir = '0';
     (*server)->pId = getpid();
 
     for(int i = 0; i < 10; i++) {
@@ -367,6 +446,86 @@ void *beast_handle(void *arg)
 
     while(1) {
         pthread_mutex_lock(&server->beast->beast_m);
+
+        if(server->beast->dir == '0') {
+            server->beast->dir = rand()%4;
+
+            switch (server->beast->dir) {
+                case 0:
+                    server->beast->dir = 'W';
+                    break;
+
+                case 1:
+                    server->beast->dir = 'A';
+                    break;
+
+                case 2:
+                    server->beast->dir = 'S';
+                    break;
+
+                case 3:
+                    server->beast->dir = 'D';
+                    break;
+            }
+        }
+        timeout(1000);
+        int flag = 1;
+
+        while(flag) {
+            pthread_mutex_lock(&server->beast->beast_m);
+            beast_move_check(server->beast->dir, server->beast, server->beast->view, &flag);
+            timeout(1000);
+        }
+
+        int losulosu = rand()%27;
+
+        int wW, wA, wS, wD;
+
+        switch (server->beast->dir) {
+            case 'W':
+                wW = 3;
+                wA = 8;
+                wS = 8;
+                wD = 8;
+                break;
+
+            case 'A':
+                wW = 8;
+                wA = 3;
+                wS = 8;
+                wD = 8;
+                break;
+
+            case 'S':
+                wW = 8;
+                wA = 8;
+                wS = 3;
+                wD = 8;
+                break;
+
+            case 'D':
+                wW = 8;
+                wA = 8;
+                wS = 8;
+                wD = 3;
+                break;
+        }
+
+        if(losulosu >= 0 && losulosu < wW) {
+            server->beast->dir = 'W';
+        }
+
+        if(losulosu >= wW && losulosu < wW+wA) {
+            server->beast->dir = 'A';
+        }
+
+        if(losulosu >= wW+wA && losulosu < wW+wA+wS) {
+            server->beast->dir = 'S';
+        }
+
+        if(losulosu >= wW+wA+wS && losulosu < wW+wA+wS+wD) {
+            server->beast->dir = 'D';
+        }
 
         if(quitFlag == 'q' || quitFlag == 'Q') {
             break;
