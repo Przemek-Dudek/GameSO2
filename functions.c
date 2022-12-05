@@ -133,7 +133,7 @@ void display_stats(struct server *server)
     move(15, (MAP_WIDTH+1)+1);
     printw("Beast position X/Y %d/%d    ", server->beast->pos->x, server->beast->pos->y);
     move(16, (MAP_WIDTH+1)+1);
-    printw("Beast direction: %c", server->beast->dir);
+    printw("Beast direction, state: %c, %d, %d", server->beast->dir, server->beast->state, server->beast->test);
     move(MAP_HEIGHT+1, 1);
     printw("Q/q to quit, %c", p2In);
 
@@ -159,7 +159,6 @@ void display_map(char **map, struct server *server)
             print_char('2', (server->player+1)->pos->y, (server->player+1)->pos->x);
         }
         print_char('1', server->player->pos->y, server->player->pos->x);
-        print_char('*', server->beast->pos->y, server->beast->pos->x);
     } else {
         print_char('1', 2, 2);
     }
@@ -169,6 +168,8 @@ void display_map(char **map, struct server *server)
             print_char('D', server->graves[i].pos.y, server->graves[i].pos.x);
         }
     }
+
+    print_char('*', server->beast->pos->y, server->beast->pos->x);
 
     if(server != NULL) {
         move(MAP_HEIGHT-1, MAP_WIDTH-1);
@@ -435,8 +436,183 @@ void *player_handle(void *arg)
         timeout(1000);
 
         quitFlag = getchar();
+        timeout(-1);
 
         player->pos = move_check(quitFlag, player, player->view);
+    }
+}
+
+int check_coords(struct pos *pos1, struct pos *pos_m)
+{
+    return (pos1->y >= pos_m->y-2 && pos1->y <= pos_m->y+2) && (pos1->x >= pos_m->x-2 && pos1->x <= pos_m->x+2);
+}
+
+void relative_pos(struct pos *pos, struct pos *pos_m, struct pos *rel) {
+    rel->x = pos->x - pos_m->x;
+    rel->y = pos->y - pos_m->y;
+}
+
+int path_find(struct pos *rel, char **map) {
+    int offset = 2;
+
+    while(rel->y > 0 || rel->x > 0) {
+        if(abs(rel->y) > abs(rel->x)) {
+            if(rel->y < 0) {
+                if(*(*(map+rel->y+1+offset)+rel->x+offset) == 'W') return 0;
+                rel->y++;
+            } else {
+                if(*(*(map+rel->y-1+offset)+rel->x+offset) == 'W') return 0;
+                rel->y--;
+            }
+        } else {
+            if(abs(rel->y) < abs(rel->x)) {
+                if(rel->x < 0) {
+                    if(*(*(map+rel->y+offset)+rel->x+1+offset) == 'W') return 0;
+                    rel->x++;
+                } else {
+                    if(*(*(map+rel->y+offset)+rel->x-1+offset) == 'W') return 0;
+                    rel->x--;
+                }
+            }
+
+            if(abs(rel->y) == abs(rel->x)) {
+                if (rel->y < 0 && rel->x < 0) {
+                    if (*(*(map + rel->y + 1 + offset) + rel->x + offset) == 'W' &&
+                        *(*(map + rel->y + offset) + rel->x + 1 + offset) == 'W') {
+                        return 0;
+                    }
+
+                    if (*(*(map + rel->y + 1 + offset) + rel->x + offset) == 'W') {
+                        rel->x++;
+                    } else rel->y++;
+                }
+
+                if (rel->y < 0 && rel->x > 0) {
+                    if (*(*(map + rel->y + 1 + offset) + rel->x + offset) == 'W' &&
+                        *(*(map + rel->y + offset) + rel->x - 1 + offset) == 'W') {
+                        return 0;
+                    }
+
+                    if (*(*(map + rel->y + 1 + offset) + rel->x + offset) == 'W') {
+                        rel->x--;
+                    } else rel->y++;
+                }
+
+                if (rel->y > 0 && rel->x < 0) {
+                    if (*(*(map + rel->y - 1 + offset) + rel->x + offset) == 'W' &&
+                        *(*(map + rel->y + offset) + rel->x + 1 + offset) == 'W') {
+                        return 0;
+                    }
+
+                    if (*(*(map + rel->y - 1 + offset) + rel->x + offset) == 'W') {
+                        rel->x++;
+                    } else rel->y--;
+                }
+
+                if (rel->y > 0 && rel->x > 0) {
+                    if (*(*(map + rel->y - 1 + offset) + rel->x + offset) == 'W' &&
+                        *(*(map + rel->y + offset) + rel->x - 1 + offset) == 'W') {
+                        return 0;
+                    }
+
+                    if (*(*(map + rel->y - 1 + offset) + rel->x + offset) == 'W') {
+                        rel->x--;
+                    } else rel->y--;
+                }
+            }
+        }
+    }
+
+    return 1;
+}
+
+void beast_chase(struct pos *rel, char **map, char *dir, int *test)
+{
+    int offset = 2;
+
+    if(abs(rel->y) > abs(rel->x)) {
+        if(rel->y < 0) {
+            *test = 1;
+            if(*(*(map+offset-1)+offset) != 'W') {
+                *dir = 'W';
+                return;
+            }
+        } else {
+            if(*(*(map+offset+1)+offset) != 'W') {
+                *dir = 'S';
+                return;
+            }
+        }
+    } else {
+        if(abs(rel->y) < abs(rel->x)) {
+            if(rel->x < 0) {
+                *test = 3;
+                if(*(*(map+offset)+offset-1) != 'W') {
+                    *dir = 'A';
+                    return;
+                }
+            } else {
+                *test = 4;
+                if(*(*(map+offset)+offset+1) != 'W') {
+                    *dir = 'D';
+                    return;
+                }
+            }
+        }
+
+        if(abs(rel->y) == abs(rel->x)) {
+            if(rel->y < 0 && rel->x < 0) {
+                *test = 5;
+                if(*(*(map+offset-1)+offset) != 'W') {
+                    *dir = 'W';
+                    return;
+                }
+
+                if(*(*(map+offset)+offset-1) != 'W') {
+                    *dir = 'A';
+                    return;
+                }
+            }
+
+            if(rel->y < 0 && rel->x > 0) {
+                *test = 6;
+                if(*(*(map+offset-1)+offset) != 'W') {
+                    *dir = 'W';
+                    return;
+                }
+
+                if(*(*(map+offset)+offset+1) != 'W') {
+                    *dir = 'D';
+                    return;
+                }
+            }
+
+            if(rel->y > 0 && rel->x < 0) {
+                *test = 7;
+                if(*(*(map+offset+1)+offset) != 'W') {
+                    *dir = 'S';
+                    return;
+                }
+
+                if(*(*(map+offset)+offset-1) != 'W') {
+                    *dir = 'A';
+                    return;
+                }
+            }
+
+            if(rel->y > 0 && rel->x > 0) {
+                *test = 8;
+                if(*(*(map+offset+1)+offset) != 'W') {
+                    *dir = 'S';
+                    return;
+                }
+
+                if(*(*(map+offset)+offset+1) != 'W') {
+                    *dir = 'D';
+                    return;
+                }
+            }
+        }
     }
 }
 
@@ -446,6 +622,23 @@ void *beast_handle(void *arg)
 
     while(1) {
         pthread_mutex_lock(&server->beast->beast_m);
+
+        server->beast->state = 0;
+
+        struct pos player_pos;
+
+        player_pos.x = server->player->pos->x;
+        player_pos.y = server->player->pos->y;
+
+        if(check_coords(&player_pos, server->beast->pos)) {
+            server->beast->state = 2;
+            struct pos rel;
+            relative_pos(server->player->pos, server->beast->pos, &rel);
+
+            if(path_find(&rel, server->beast->view)) {
+                server->beast->state = 1;
+            }
+        }
 
         if(server->beast->dir == '0') {
             server->beast->dir = rand()%4;
@@ -468,63 +661,79 @@ void *beast_handle(void *arg)
                     break;
             }
         }
-        timeout(1000);
+        //timeout(1000);
+
         int flag = 1;
 
-        while(flag) {
+        while(flag != 0 && server->beast->state != 1) {
             pthread_mutex_lock(&server->beast->beast_m);
+            if(check_coords(&player_pos, server->beast->pos)) {
+                server->beast->state = 2;
+                struct pos rel;
+                relative_pos(server->player->pos, server->beast->pos, &rel);
+
+                if(path_find(&rel, server->beast->view)) {
+                    server->beast->state = 1;
+                }
+            }
             beast_move_check(server->beast->dir, server->beast, server->beast->view, &flag);
-            timeout(1000);
         }
 
-        int losulosu = rand()%27;
+        if(server->beast->state != 1) {
+            int losulosu = rand()%27;
 
-        int wW, wA, wS, wD;
+            int wW, wA, wS, wD;
 
-        switch (server->beast->dir) {
-            case 'W':
-                wW = 3;
-                wA = 8;
-                wS = 8;
-                wD = 8;
-                break;
+            switch (server->beast->dir) {
+                case 'W':
+                    wW = 3;
+                    wA = 8;
+                    wS = 8;
+                    wD = 8;
+                    break;
 
-            case 'A':
-                wW = 8;
-                wA = 3;
-                wS = 8;
-                wD = 8;
-                break;
+                case 'A':
+                    wW = 8;
+                    wA = 3;
+                    wS = 8;
+                    wD = 8;
+                    break;
 
-            case 'S':
-                wW = 8;
-                wA = 8;
-                wS = 3;
-                wD = 8;
-                break;
+                case 'S':
+                    wW = 8;
+                    wA = 8;
+                    wS = 3;
+                    wD = 8;
+                    break;
 
-            case 'D':
-                wW = 8;
-                wA = 8;
-                wS = 8;
-                wD = 3;
-                break;
-        }
+                case 'D':
+                    wW = 8;
+                    wA = 8;
+                    wS = 8;
+                    wD = 3;
+                    break;
+            }
 
-        if(losulosu >= 0 && losulosu < wW) {
-            server->beast->dir = 'W';
-        }
+            if(losulosu >= 0 && losulosu < wW) {
+                server->beast->dir = 'W';
+            }
 
-        if(losulosu >= wW && losulosu < wW+wA) {
-            server->beast->dir = 'A';
-        }
+            if(losulosu >= wW && losulosu < wW+wA) {
+                server->beast->dir = 'A';
+            }
 
-        if(losulosu >= wW+wA && losulosu < wW+wA+wS) {
-            server->beast->dir = 'S';
-        }
+            if(losulosu >= wW+wA && losulosu < wW+wA+wS) {
+                server->beast->dir = 'S';
+            }
 
-        if(losulosu >= wW+wA+wS && losulosu < wW+wA+wS+wD) {
-            server->beast->dir = 'D';
+            if(losulosu >= wW+wA+wS && losulosu < wW+wA+wS+wD) {
+                server->beast->dir = 'D';
+            }
+        } else {
+            struct pos rel;
+            relative_pos(server->player->pos, server->beast->pos, &rel);
+            beast_chase(&rel, server->beast->view, &server->beast->dir, &server->beast->test);
+            beast_move_check(server->beast->dir, server->beast, server->beast->view, &flag);
         }
 
         if(quitFlag == 'q' || quitFlag == 'Q') {

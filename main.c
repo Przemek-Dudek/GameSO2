@@ -32,6 +32,14 @@ int main()
     pthread_create(&server->beast->beast_t, NULL, beast_handle, server);
 
     for(int i = 0; i != -1; i++) {
+        if(quitFlag == 'q' || quitFlag == 'Q') {
+            i = -1;
+        }
+
+        sleep(1);
+
+        if(i == -1) break;
+
         player_vision(server, map, 0);
         player_vision(server, map, 1);
         server->beast->view = beast_vision(server, map);
@@ -46,13 +54,6 @@ int main()
         all_players_matter(server->player+1, map);
         check_collision(server, map);
         display_map(map, server);
-
-        if(quitFlag == 'q' || quitFlag == 'Q') {
-            i = -1;
-            endwin();
-        }
-
-        sleep(1);
     }
 
     free(server->player->pos);
@@ -71,6 +72,8 @@ int main()
 
     free(server);
     free_map(map);
+
+    endwin();
 
     return 0;
 }

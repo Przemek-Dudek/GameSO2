@@ -46,6 +46,9 @@ struct beast {
     char **view;
     char dir;
 
+    int state;
+    int test;
+
     struct pos *pos;
 };
 
