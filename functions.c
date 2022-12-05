@@ -135,7 +135,7 @@ void display_stats(struct server *server)
     move(16, (MAP_WIDTH+1)+1);
     printw("Beast direction, state: %c, %d, %d", server->beast->dir, server->beast->state, server->beast->test);
     move(MAP_HEIGHT+1, 1);
-    printw("Q/q to quit, %c", p2In);
+    printw("Q/q to quit, %d     ", p2In);
 
     refresh();
 }
@@ -223,7 +223,7 @@ struct pos *move_check(int input, struct player *player, char **map)
 {
     struct pos *position = player->pos;
     switch (input) {
-        case 'w': case 'W':
+        case 'w': case 'W': case 259:
             if(position->y == 0 || *(*(map+2-1)+2) == 'W') return position;
 
             if(player->krzok == 1) {
@@ -237,7 +237,7 @@ struct pos *move_check(int input, struct player *player, char **map)
             position->y -= 1;
             return position;
 
-        case 'a': case 'A':
+        case 'a': case 'A': case 260:
             if(position->x == 0 || *(*(map+2)+2-1) == 'W') return position;
 
             if(player->krzok == 1) {
@@ -250,7 +250,7 @@ struct pos *move_check(int input, struct player *player, char **map)
             position->x -= 1;
             return position;
 
-        case 's': case 'S':
+        case 's': case 'S': case 258:
             if(position->y == MAP_HEIGHT-1 || *(*(map+2+1)+2) == 'W') return position;
 
             if(player->krzok == 1) {
@@ -264,7 +264,7 @@ struct pos *move_check(int input, struct player *player, char **map)
             position->y += 1;
             return position;
 
-        case 'd': case 'D':
+        case 'd': case 'D': case 261:
             if(position->x == (MAP_WIDTH+1)-1 || *(*(map+2)+2+1) == 'W') return position;
 
             if(player->krzok == 1) {
@@ -435,7 +435,7 @@ void *player_handle(void *arg)
         flushinp();
         timeout(1000);
 
-        quitFlag = getchar();
+        quitFlag = getch();
         timeout(-1);
 
         player->pos = move_check(quitFlag, player, player->view);
@@ -624,6 +624,7 @@ void *beast_handle(void *arg)
         pthread_mutex_lock(&server->beast->beast_m);
 
         server->beast->state = 0;
+        server->beast->test = 0;
 
         struct pos player_pos;
 
@@ -633,10 +634,25 @@ void *beast_handle(void *arg)
         if(check_coords(&player_pos, server->beast->pos)) {
             server->beast->state = 2;
             struct pos rel;
-            relative_pos(server->player->pos, server->beast->pos, &rel);
+            relative_pos(&player_pos, server->beast->pos, &rel);
 
             if(path_find(&rel, server->beast->view)) {
                 server->beast->state = 1;
+            }
+        }
+
+        struct pos player2_pos;
+
+        player2_pos.x = server->player[1].pos->x;
+        player2_pos.y = server->player[1].pos->y;
+
+        if(server->player[1].is_there && check_coords(&player2_pos, server->beast->pos)) {
+            server->beast->state = 4;
+            struct pos rel;
+            relative_pos(&player2_pos, server->beast->pos, &rel);
+
+            if(path_find(&rel, server->beast->view)) {
+                server->beast->state = 3;
             }
         }
 
@@ -661,12 +677,12 @@ void *beast_handle(void *arg)
                     break;
             }
         }
-        //timeout(1000);
 
         int flag = 1;
 
-        while(flag != 0 && server->beast->state != 1) {
+        while(flag != 0 && server->beast->state != 1 && server->beast->state != 3) {
             pthread_mutex_lock(&server->beast->beast_m);
+
             if(check_coords(&player_pos, server->beast->pos)) {
                 server->beast->state = 2;
                 struct pos rel;
@@ -676,10 +692,20 @@ void *beast_handle(void *arg)
                     server->beast->state = 1;
                 }
             }
+
+            if(server->player[1].is_there && check_coords(&player2_pos, server->beast->pos)) {
+                server->beast->state = 4;
+                struct pos rel;
+                relative_pos(server->player[1].pos, server->beast->pos, &rel);
+
+                if(path_find(&rel, server->beast->view)) {
+                    server->beast->state = 3;
+                }
+            }
             beast_move_check(server->beast->dir, server->beast, server->beast->view, &flag);
         }
 
-        if(server->beast->state != 1) {
+        if(server->beast->state != 1 && server->beast->state != 3) {
             int losulosu = rand()%27;
 
             int wW, wA, wS, wD;
@@ -731,9 +757,15 @@ void *beast_handle(void *arg)
             }
         } else {
             struct pos rel;
-            relative_pos(server->player->pos, server->beast->pos, &rel);
-            beast_chase(&rel, server->beast->view, &server->beast->dir, &server->beast->test);
-            beast_move_check(server->beast->dir, server->beast, server->beast->view, &flag);
+            if(server->beast->state == 1) {
+                relative_pos(server->player->pos, server->beast->pos, &rel);
+                beast_chase(&rel, server->beast->view, &server->beast->dir, &server->beast->test);
+                beast_move_check(server->beast->dir, server->beast, server->beast->view, &flag);
+            } else {
+                relative_pos(server->player[1].pos, server->beast->pos, &rel);
+                beast_chase(&rel, server->beast->view, &server->beast->dir, &server->beast->test);
+                beast_move_check(server->beast->dir, server->beast, server->beast->view, &flag);
+            }
         }
 
         if(quitFlag == 'q' || quitFlag == 'Q') {
@@ -764,7 +796,7 @@ void check_collision(struct server *server, char** map) {
         int amount = 0;
         amount += server->player->carried;
         amount += server->player[1].carried;
-        add_grave(server, p1, amount);
+        if(amount != 0) add_grave(server, p1, amount);
 
         server->player->carried = 0;
         server->player[1].carried = 0;
@@ -776,7 +808,7 @@ void check_collision(struct server *server, char** map) {
     if(p1->y == b->y && p1->x == b->x) {
         int amount = 0;
         amount += server->player->carried;
-        add_grave(server, p1, amount);
+        if(amount != 0) add_grave(server, p1, amount);
 
         server->player->carried = 0;
         server->player->pos = find_avb_pos(map, server->player->pos);
@@ -785,7 +817,7 @@ void check_collision(struct server *server, char** map) {
     if(p2->y == b->y && p2->x == b->x && server->player[1].is_there == 1) {
         int amount = 0;
         amount += server->player[1].carried;
-        add_grave(server, p2, amount);
+        if(amount != 0) add_grave(server, p2, amount);
 
         server->player[1].carried = 0;
         server->player[1].pos = find_avb_pos(map, server->player[1].pos);
@@ -897,7 +929,7 @@ void *player2(void *arg)
             pthread_mutex_lock(&(server->player+1)->player_m);
             send_struct(server, w_fifo);
 
-            read(r_fifo, &p2In, sizeof(char));
+            read(r_fifo, &p2In, sizeof(int));
 
             if(p2In == 'q' || p2In == 'Q') {
                 (server->player+1)->is_there = 0;

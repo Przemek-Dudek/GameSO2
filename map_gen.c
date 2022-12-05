@@ -183,7 +183,7 @@ int map_gen()
 
     if(rand()%16 == 0) {
         step = 1;
-    } else step = 3;
+    } else step = 2;
 
     for(int i = 0; i < NUM_OF_MAPS; i++) {
 

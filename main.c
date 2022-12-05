@@ -14,6 +14,7 @@ int main()
 {
     initscr();
     start_color();
+    keypad(stdscr, true);
 
     char **map = NULL;
     struct server *server;

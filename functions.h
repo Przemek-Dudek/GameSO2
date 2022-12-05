@@ -16,7 +16,7 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 int quitFlag = 0;
-char p2In;
+int p2In;
 int testsik = 0;
 
 struct pos {

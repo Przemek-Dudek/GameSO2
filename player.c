@@ -248,7 +248,7 @@ void free_map(char **map)
     free(map);
 }
 
-char input;
+int input;
 
 void *input_handle(void *arg)
 {
@@ -259,7 +259,7 @@ void *input_handle(void *arg)
 
         flushinp();
 
-        input = getchar();
+        input = getch();
         if(input == 'q' || input == 'Q' || quitFlag == 1) {
             break;
         }
@@ -270,6 +270,11 @@ int main()
 {
     initscr();
     start_color();
+
+    printw("Oczekiwanie na Server");
+    refresh();
+
+    keypad(stdscr, true);
 
     int r_fifo = open("r_player", O_WRONLY);
     int w_fifo = open("w_player", O_RDONLY);
@@ -353,7 +358,7 @@ int main()
 
         pthread_mutex_unlock(&server->player[1].player_m);
 
-        write(server->player[1].fifo, &input, sizeof(char));
+        write(server->player[1].fifo, &input, sizeof(int));
 
         if(input == 'q' || input == 'Q' || quitFlag == 1) {
             break;
