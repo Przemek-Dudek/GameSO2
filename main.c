@@ -33,8 +33,25 @@ int main()
     pthread_create(&server->beast->beast_t, NULL, beast_handle, server);
 
     for(int i = 0; i != -1; i++) {
-        if(quitFlag == 'q' || quitFlag == 'Q') {
-            i = -1;
+        switch (quitFlag) {
+            case 'c': case 'C':
+                spawn_coin(&map);
+                break;
+
+            case 't':
+                spawn_treasure(&map);
+                break;
+
+            case 'T':
+                spawn_large_treasure(&map);
+                break;
+
+            case 'q': case 'Q':
+                i = -1;
+                break;
+
+            default:
+                break;
         }
 
         sleep(1);

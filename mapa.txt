@@ -1,13 +1,13 @@
 WWWWWWWWWWWWWWWWWWWWWW
-W     c       #T     W
-W    W  # c          W
-W  #    WW##       t W
-W     W W        #   W
-W   c   ##  A#       W
-W    #        W # #  W
-W#     # WW  #       W
-W  # # #         #  #W
-Wc#  c   WW   W #W  #W
-W           #  #     W
+W ##    ## #         W
+W # c          W   # W
+W    T# #A W       ##W
+W   #    # Wc      # W
+W    #   #  #    #   W
+W   #  # ##    #c    W
+W  c   #WWWWWW W    #W
+W c          W  t    W
+W     W WW#W WWW     W
+W          #       # W
 WWWWWWWWWWWWWWWWWWWWWW
 
